@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Appointment - Tennis Squad Tracker</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  {% include 'navbar.html' %}
+  <div class="container mt-4">
+    <h1>Create New Appointment</h1>
+    <form method="POST">        <div class="form-group">
+            <label for="appointment_date">Date:</label>
+            <input type="date" name="appointment_date" id="appointment_date" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="appointment_time">Time (Default: 21:00-23:00):</label>
+            <input type="text" name="appointment_time" id="appointment_time" class="form-control" value="21:00-23:00" required>
+        </div>
+      <div class="form-group">
+        <label>Select Squad Members to Enroll:</label>
+        {% for member in squad %}
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="members" value="{{ member.id }}" id="member{{ member.id }}">
+            <label class="form-check-label" for="member{{ member.id }}">
+              {{ member.name }}
+            </label>
+            <!-- Role dropdown for each member -->
+            <select class="form-control form-control-sm" name="role_{{ member.id }}">
+              <option value="none">None</option>
+              <option value="ball">Ball Carrying</option>
+              <option value="court">Court Reservation</option>
+            </select>
+          </div>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn btn-success">Create Appointment</button>
+    </form>
+  </div>
+</body>
+</html>

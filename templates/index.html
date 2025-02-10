@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tennis Squad Tracker</title>
+  <!-- Bootstrap CSS via CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Tennis Squad Tracker</a>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container mt-4">
+    <h1 class="mb-4">Squad Overview</h1>
+    
+    <!-- Squad Data Table -->
+    <table class="table table-striped">
+      <thead class="thead-dark">
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Attendance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for member in squad %}
+        <tr>
+          <td>{{ member[0] }}</td>
+          <td>{{ member[1] }}</td>
+          <td>{{ member[2] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    
+    <!-- Update Attendance Form -->
+    <div class="card">
+      <div class="card-header">
+        Update Attendance
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('update') }}">
+          <div class="form-group">
+            <label for="name">Squad Member Name:</label>
+            <input type="text" name="name" id="name" class="form-control" placeholder="Enter name" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Mark Attendance</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS and dependencies via CDN -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Squad - Tennis Squad Tracker</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  {% include 'navbar.html' %}
+  <div class="container mt-4">
+    <h1>Squad Members</h1>
+    <a href="{{ url_for('squad_add') }}" class="btn btn-success mb-2">Add Member</a>
+
+    <!-- Sorting options -->
+    <a href="{{ url_for('squad', sort='ball') }}" class="btn btn-info mb-2">Sort by Ball</a>
+    <a href="{{ url_for('squad', sort='court') }}" class="btn btn-info mb-2">Sort by Court</a>
+    <a href="{{ url_for('squad') }}" class="btn btn-secondary mb-2">Clear Sorting</a>
+    <!-- existing table here -->
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Ball Count</th>
+          <th>Court Count</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for member in squad %}
+        <tr>
+          <td>{{ member.id }}</td>
+          <td>{{ member.name }}</td>
+          <td>{{ member.ball_count }}</td>
+          <td>{{ member.court_count }}</td>
+          <td>
+            <a href="{{ url_for('squad_edit', id=member.id) }}" class="btn btn-primary btn-sm">Edit</a>
+            <form action="{{ url_for('squad_delete', id=member.id) }}" method="POST" style="display:inline-block;">
+              <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

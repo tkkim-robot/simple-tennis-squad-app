@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Appointment - Tennis Squad Tracker</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  {% include 'navbar.html' %}
+  <div class="container mt-4">
+    <h1>Edit Appointment</h1>
+    <form method="POST">
+      <div class="form-group">
+        <label for="appointment_date">Date:</label>
+        <input type="date" name="appointment_date" id="appointment_date" class="form-control" value="{{ appointment.appointment_date }}" required>
+      </div>
+      <div class="form-group">
+        <label for="appointment_time">Time:</label>
+        <input type="text" name="appointment_time" id="appointment_time" class="form-control" value="{{ appointment.appointment_time or '21:00-23:00' }}" required>
+      </div>
+      <!-- Section to edit roles for each enrolled member -->
+      {% for m in members %}
+      <div class="form-group">
+        <label for="role_{{ m.squad_id }}">Role for {{ m.name }}:</label>
+        <select class="form-control" name="role_{{ m.squad_id }}" id="role_{{ m.squad_id }}">
+          <option value="none" {% if m.role == 'none' %}selected{% endif %}>None</option>
+          <option value="ball" {% if m.role == 'ball' %}selected{% endif %}>Ball Carrying</option>
+          <option value="court" {% if m.role == 'court' %}selected{% endif %}>Court Reservation</option>
+        </select>
+      </div>
+      {% endfor %}
+      <!-- Only one update button -->
+      <button type="submit" class="btn btn-primary">Update Appointment</button>
+    </form>
+  </div>
+</body>
+</html>

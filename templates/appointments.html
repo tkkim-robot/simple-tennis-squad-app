@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Appointments - Tennis Squad Tracker</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  {% include 'navbar.html' %}
+  <div class="container mt-4">
+    <h1>Appointments</h1>
+    <a href="{{ url_for('appointment_new') }}" class="btn btn-success mb-2">+ Create New Appointment</a>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th style="width: 50px;">ID</th>
+          <th style="width: 100px;">Date</th>
+          <th style="width: 100px;">Time</th>
+          <th>Members Enrolled</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for data in appointment_data %}
+        <tr>
+          <td>{{ data.appointment.id }}</td>
+          <td>{{ data.appointment.appointment_date }}</td>
+          <td>{{ data.appointment.appointment_time }}</td>
+          <td>
+            <table class="table table-borderless mb-0">
+              <tr>
+                <td><strong>Ball Carrying:</strong></td>
+                <td>
+                  {% for m in data.members if m.role == 'ball' %}
+                    {{ m.name }}{% if not loop.last %}, {% endif %}
+                  {% endfor %}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Court Reservation:</strong></td>
+                <td>
+                  {% for m in data.members if m.role == 'court' %}
+                    {{ m.name }}{% if not loop.last %}, {% endif %}
+                  {% endfor %}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Other:</strong></td>
+                <td>
+                  {% for m in data.members if m.role == 'none' %}
+                    {{ m.name }}{% if not loop.last %}, {% endif %}
+                  {% endfor %}
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td>
+            <a href="{{ url_for('appointment_edit', appointment_id=data.appointment.id) }}" class="btn btn-primary btn-sm">Edit</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

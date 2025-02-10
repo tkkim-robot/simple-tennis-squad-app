@@ -47,6 +47,34 @@ def init_db():
     conn.commit()
     conn.close()
 
+def reassign_squad_ids():
+    """
+    Reassign squad IDs to be sequential starting from 1 and update any references in appointment_members.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Temporarily disable foreign key constraints
+    cursor.execute("PRAGMA foreign_keys = OFF;")
+    
+    # Get all squad rows ordered by current id
+    squads = cursor.execute("SELECT id FROM squad ORDER BY id").fetchall()
+    
+    mapping = {}  # Mapping: old_id -> new_id
+    new_id = 1
+    for row in squads:
+        mapping[row["id"]] = new_id
+        new_id += 1
+
+    # Update the squad table and appointment_members references
+    for old_id, new_id in mapping.items():
+        cursor.execute("UPDATE squad SET id = ? WHERE id = ?", (new_id, old_id))
+        cursor.execute("UPDATE appointment_members SET squad_id = ? WHERE squad_id = ?", (new_id, old_id))
+    
+    conn.commit()
+    # Re-enable foreign key constraints
+    cursor.execute("PRAGMA foreign_keys = ON;")
+    conn.close()
+
 def recalc_counts(squad_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -113,16 +141,15 @@ def squad_add():
         name = request.form['name']
         conn = get_db_connection()
         try:
-            conn.execute(
-                "INSERT INTO squad (name, ball_count, court_count) VALUES (?, 0, 0)",
-                (name,)
-            )
+            conn.execute("INSERT INTO squad (name, ball_count, court_count) VALUES (?, 0, 0)", (name,))
             conn.commit()
             flash('Squad member added successfully.', 'success')
         except sqlite3.IntegrityError:
             flash('Member already exists or invalid input.', 'danger')
         finally:
             conn.close()
+        # Reassign squad IDs after adding a member
+        reassign_squad_ids()
         return redirect(url_for('squad'))
     return render_template('squad_add.html')
 
@@ -143,9 +170,12 @@ def squad_edit(id):
         except ValueError:
             flash("Ball and Court counts must be integers.", "danger")
             return redirect(url_for('squad_edit', id=id))
-        conn.execute("UPDATE squad SET name = ?, ball_count = ?, court_count = ? WHERE id = ?", (name, ball_count, court_count, id))
+        conn.execute("UPDATE squad SET name = ?, ball_count = ?, court_count = ? WHERE id = ?", 
+                     (name, ball_count, court_count, id))
         conn.commit()
         conn.close()
+        # Reassign squad IDs after an edit
+        reassign_squad_ids()
         flash('Member updated successfully.', 'success')
         return redirect(url_for('squad'))
     conn.close()
@@ -157,6 +187,8 @@ def squad_delete(id):
     conn.execute("DELETE FROM squad WHERE id = ?", (id,))
     conn.commit()
     conn.close()
+    # Reassign squad IDs after deletion
+    reassign_squad_ids()
     flash('Member deleted.', 'success')
     return redirect(url_for('squad'))
 

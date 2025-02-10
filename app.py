@@ -225,6 +225,7 @@ def appointment_new():
 def appointment_edit(appointment_id):
     conn = get_db_connection()
     cursor = conn.cursor()
+    # Get the appointment record
     appointment = cursor.execute(
         "SELECT * FROM appointments WHERE id = ?",
         (appointment_id,)
@@ -233,42 +234,70 @@ def appointment_edit(appointment_id):
         flash("Appointment not found.", "danger")
         conn.close()
         return redirect(url_for('appointments'))
-    members = cursor.execute(
-        """
+    
+    # Retrieve current members for this appointment
+    current_members = cursor.execute("""
         SELECT am.id AS am_id, am.squad_id, s.name, am.role
         FROM appointment_members am
         JOIN squad s ON am.squad_id = s.id
         WHERE am.appointment_id = ?
-        """,
-        (appointment_id,)
-    ).fetchall()
+    """, (appointment_id,)).fetchall()
+    
+    # Retrieve squad members not yet enrolled in this appointment
+    if current_members:
+        current_ids = [str(m['squad_id']) for m in current_members]
+        query = "SELECT * FROM squad WHERE id NOT IN ({})".format(",".join(current_ids))
+    else:
+        query = "SELECT * FROM squad"
+    new_candidates = cursor.execute(query).fetchall()
+    
     if request.method == 'POST':
+        # Update appointment details
         appointment_date = request.form['appointment_date']
         appointment_time = request.form['appointment_time']
         cursor.execute(
             "UPDATE appointments SET appointment_date = ?, appointment_time = ? WHERE id = ?",
             (appointment_date, appointment_time, appointment_id)
         )
-        # Collect all member IDs whose role has changed
-        changed_members = set()
-        for m in members:
-            member_id = m['squad_id']
-            new_role = request.form.get(f'role_{member_id}', 'none')
-            if new_role != m['role']:
+        
+        affected_members = set()
+        # Process current members: update role or remove if requested.
+        for m in current_members:
+            squad_id = m['squad_id']
+            remove_field = request.form.get("remove_{}".format(squad_id))
+            new_role = request.form.get("role_{}".format(squad_id), 'none')
+            if remove_field == "on":
+                cursor.execute("DELETE FROM appointment_members WHERE id = ?", (m['am_id'],))
+                affected_members.add(squad_id)
+            else:
+                if new_role != m['role']:
+                    cursor.execute("UPDATE appointment_members SET role = ? WHERE id = ?", (new_role, m['am_id']))
+                    affected_members.add(squad_id)
+        
+        # Process new members: add any candidate that is selected.
+        for candidate in new_candidates:
+            squad_id = candidate['id']
+            if request.form.get("add_{}".format(squad_id)) == "on":
+                new_role = request.form.get("role_new_{}".format(squad_id), 'none')
                 cursor.execute(
-                    "UPDATE appointment_members SET role = ? WHERE id = ?",
-                    (new_role, m['am_id'])
+                    "INSERT INTO appointment_members (appointment_id, squad_id, role) VALUES (?, ?, ?)",
+                    (appointment_id, squad_id, new_role)
                 )
-                changed_members.add(member_id)
+                affected_members.add(squad_id)
+        
         conn.commit()
         conn.close()
-        # After closing the main connection, update counts for each changed member
-        for member_id in changed_members:
+        # Recalculate counts for each affected member
+        for member_id in affected_members:
             recalc_counts(member_id)
-        flash('Appointment updated.', 'success')
+        flash("Appointment updated.", "success")
         return redirect(url_for('appointments'))
+    
     conn.close()
-    return render_template('appointment_edit.html', appointment=appointment, members=members)
+    return render_template("appointment_edit.html",
+                           appointment=appointment,
+                           current_members=current_members,
+                           new_candidates=new_candidates)
 
 if __name__ == '__main__':
     app.run(debug=True)

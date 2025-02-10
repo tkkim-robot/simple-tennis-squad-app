@@ -10,6 +10,7 @@
   <div class="container mt-4">
     <h1>Edit Appointment</h1>
     <form method="POST">
+      <!-- Appointment Details -->
       <div class="form-group">
         <label for="appointment_date">Date:</label>
         <input type="date" name="appointment_date" id="appointment_date" class="form-control" value="{{ appointment.appointment_date }}" required>
@@ -18,18 +19,47 @@
         <label for="appointment_time">Time:</label>
         <input type="text" name="appointment_time" id="appointment_time" class="form-control" value="{{ appointment.appointment_time or '21:00-23:00' }}" required>
       </div>
-      <!-- Section to edit roles for each enrolled member -->
-      {% for m in members %}
-      <div class="form-group">
-        <label for="role_{{ m.squad_id }}">Role for {{ m.name }}:</label>
-        <select class="form-control" name="role_{{ m.squad_id }}" id="role_{{ m.squad_id }}">
-          <option value="none" {% if m.role == 'none' %}selected{% endif %}>None</option>
-          <option value="ball" {% if m.role == 'ball' %}selected{% endif %}>Ball Carrying</option>
-          <option value="court" {% if m.role == 'court' %}selected{% endif %}>Court Reservation</option>
+      
+      <!-- Current Members Section -->
+      <h3>Current Members</h3>
+      {% for m in current_members %}
+      <div class="form-group border p-2">
+        <label>{{ m.name }}</label>
+        <div class="row">
+          <div class="col-md-6">
+            <select class="form-control" name="role_{{ m.squad_id }}">
+              <option value="none" {% if m.role == 'none' %}selected{% endif %}>None</option>
+              <option value="ball" {% if m.role == 'ball' %}selected{% endif %}>Ball Carrying</option>
+              <option value="court" {% if m.role == 'court' %}selected{% endif %}>Court Reservation</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" name="remove_{{ m.squad_id }}" id="remove_{{ m.squad_id }}">
+              <label class="form-check-label" for="remove_{{ m.squad_id }}">Remove</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      
+      <!-- New Members Section -->
+      <h3>Add New Members</h3>
+      {% for candidate in new_candidates %}
+      <div class="form-group border p-2">
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" name="add_{{ candidate.id }}" id="add_{{ candidate.id }}">
+          <label class="form-check-label" for="add_{{ candidate.id }}">{{ candidate.name }}</label>
+        </div>
+        <select class="form-control mt-1" name="role_new_{{ candidate.id }}">
+          <option value="none" selected>None</option>
+          <option value="ball">Ball Carrying</option>
+          <option value="court">Court Reservation</option>
         </select>
       </div>
       {% endfor %}
-      <!-- Only one update button -->
+      
+      <!-- Submit Button -->
       <button type="submit" class="btn btn-primary">Update Appointment</button>
     </form>
   </div>
